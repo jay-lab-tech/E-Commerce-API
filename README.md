@@ -17,6 +17,7 @@ Implemented so far:
 - Dependency audit currently reports zero vulnerabilities.
 - Category catalog module with public reads and admin-only create, update, and soft-delete endpoints.
 - Product catalog module with category relation, public filtering, and admin CRUD endpoints.
+- Authenticated cart module with stock-aware add, update, remove, and clear operations.
 
 Business modules are intentionally added in phases. Catalog CRUD is the first implementation phase, followed by products, cart, and checkout.
 
@@ -152,6 +153,20 @@ Example public filters:
 ```text
 GET /api/products?search=keyboard&category=electronics&minPrice=100000&maxPrice=1000000&page=1&limit=20
 ```
+
+## Cart API
+
+All Cart endpoints require a Bearer access token. The cart is scoped to the authenticated JWT `sub` value and never accepts `userId` from the request body.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/cart` | Get the current user's cart |
+| `POST` | `/api/cart/items` | Add quantity to a product in the cart |
+| `PATCH` | `/api/cart/items/:productId` | Set the exact quantity for a product |
+| `DELETE` | `/api/cart/items/:productId` | Remove one product from the cart |
+| `DELETE` | `/api/cart` | Clear the current user's cart |
+
+Cart writes reject inactive products and quantities above current stock. Checkout will later re-check stock inside a database transaction before creating an order.
 
 ## Planned API modules
 
