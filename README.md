@@ -6,7 +6,7 @@ The service owns catalog, cart, order, inventory, and payment-domain data. User 
 
 ## Current status
 
-Foundation complete:
+Implemented so far:
 
 - Express and TypeScript project setup.
 - Environment validation with Zod.
@@ -15,8 +15,9 @@ Foundation complete:
 - Initial domain schema and migration for categories, products, carts, orders, payments, and inventory movements.
 - Docker Compose stack for API, PostgreSQL, and Redis.
 - Dependency audit currently reports zero vulnerabilities.
+- Category catalog module with public reads and admin-only create, update, and soft-delete endpoints.
 
-Business modules are intentionally added in phases. The first implementation phase is catalog CRUD, followed by cart and checkout.
+Business modules are intentionally added in phases. Catalog CRUD is the first implementation phase, followed by products, cart, and checkout.
 
 ## Architecture
 
@@ -109,11 +110,29 @@ docker compose down
 - `InventoryMovement` provides an auditable history for stock changes and future reservations/releases.
 - `userId` is a UUID reference to the Auth Service identity; no duplicate `User` table is maintained here.
 
+## Category API
+
+Public endpoints:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/categories` | List active categories with search and pagination |
+| `GET` | `/api/categories/:slug` | Get one active category |
+
+Admin endpoints require a Bearer access token issued by the Auth Service and a user with the `ADMIN` role:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/categories` | Create a category; slug is generated when omitted |
+| `PUT` | `/api/categories/:id` | Update category name or slug |
+| `DELETE` | `/api/categories/:id` | Soft-delete a category |
+
+The API verifies the Auth Service JWT using the same local `JWT_ACCESS_SECRET`. In a deployed environment, keep this secret synchronized through a secret manager rather than committing it.
+
 ## Planned API modules
 
 | Module | Planned responsibility |
 | --- | --- |
-| Categories | Public reads and admin CRUD |
 | Products | CRUD, search, filters, sorting, pagination, cache invalidation |
 | Cart | Add, update, remove, and clear items |
 | Orders | Checkout, stock locking, order history, cancellation |

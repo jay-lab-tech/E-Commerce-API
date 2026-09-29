@@ -3,12 +3,14 @@ import helmet from 'helmet';
 import { prisma } from './config/database.js';
 import { redis } from './config/redis.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { categoryRouter } from './modules/category/category.routes.js';
 
 export const app = express();
 
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(express.json({ limit: '25kb' }));
+app.use('/api/categories', categoryRouter);
 
 app.get('/health', async (_request, response) => {
   const [databaseCheck, redisCheck] = await Promise.allSettled([
