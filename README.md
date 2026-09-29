@@ -16,6 +16,7 @@ Implemented so far:
 - Docker Compose stack for API, PostgreSQL, and Redis.
 - Dependency audit currently reports zero vulnerabilities.
 - Category catalog module with public reads and admin-only create, update, and soft-delete endpoints.
+- Product catalog module with category relation, public filtering, and admin CRUD endpoints.
 
 Business modules are intentionally added in phases. Catalog CRUD is the first implementation phase, followed by products, cart, and checkout.
 
@@ -128,6 +129,29 @@ Admin endpoints require a Bearer access token issued by the Auth Service and a u
 | `DELETE` | `/api/categories/:id` | Soft-delete a category |
 
 The API verifies the Auth Service JWT using the same local `JWT_ACCESS_SECRET`. In a deployed environment, keep this secret synchronized through a secret manager rather than committing it.
+
+## Product API
+
+Public endpoints:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/products` | List active products with search, category, price, and pagination filters |
+| `GET` | `/api/products/:slug` | Get one active product with its category |
+
+Admin endpoints use the same Auth Service Bearer token requirement as Category API:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/products` | Create a product under an existing category |
+| `PUT` | `/api/products/:id` | Update product details, price, stock, or category |
+| `DELETE` | `/api/products/:id` | Soft-delete a product |
+
+Example public filters:
+
+```text
+GET /api/products?search=keyboard&category=electronics&minPrice=100000&maxPrice=1000000&page=1&limit=20
+```
 
 ## Planned API modules
 
