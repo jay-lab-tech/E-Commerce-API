@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  MOCK
+  MIDTRANS
+  XENDIT
+}
+
+enum InventoryMovementType {
+  PURCHASE
+  RESERVATION
+  RELEASE
+  ADJUSTMENT
+}
+
+model Category {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id          String             @id @default(uuid()) @db.Uuid
+  categoryId  String             @db.Uuid
+  category    Category           @relation(fields: [categoryId], references: [id])
+  name        String
+  slug        String             @unique
+  description String?
+  price       Decimal            @db.Decimal(12, 2)
+  stock       Int                @default(0)
+  imageUrl    String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  movements   InventoryMovement[]
+
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model CartItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  productId String   @db.Uuid
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Order {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @db.Uuid
+  orderNumber     String        @unique
+  totalAmount     Decimal       @db.Decimal(12, 2)
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  shippingAddress String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  items           OrderItem[]
+  payment         Payment?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  orderId     String   @db.Uuid
+  productId   String   @db.Uuid
+  productName String
+  price       Decimal  @db.Decimal(12, 2)
+  quantity    Int
+  subtotal    Decimal  @db.Decimal(12, 2)
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Payment {
+  id          String        @id @default(uuid()) @db.Uuid
+  orderId     String        @unique @db.Uuid
+  externalId  String        @unique
+  method      PaymentMethod
+  amount      Decimal       @db.Decimal(12, 2)
+  status      PaymentStatus @default(PENDING)
+  paidAt      DateTime?
+  rawResponse Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model InventoryMovement {
+  id        String                @id @default(uuid()) @db.Uuid
+  productId String                @db.Uuid
+  type      InventoryMovementType
+  quantity  Int
+  reference String?
+  createdAt DateTime              @default(now())
+  product   Product               @relation(fields: [productId], references: [id])
+
+  @@index([productId, createdAt])
+}
