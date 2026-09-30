@@ -9,4 +9,15 @@ export const orderListSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const orderStatusSchema = z.enum(['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED']);
+
+export const adminOrderListSchema = orderListSchema.extend({
+  status: orderStatusSchema.optional(),
+});
+
+export const updateOrderStatusSchema = z.strictObject({
+  status: orderStatusSchema,
+});
+
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+export type OrderStatusInput = z.infer<typeof orderStatusSchema>;
