@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { prisma } from '../../config/database.js';
-import type { CheckoutInput } from './order.schemas.js';
+import type { CheckoutInput, OrderStatusInput } from './order.schemas.js';
 
 const orderInclude = {
   items: { orderBy: { productName: 'asc' as const } },
@@ -100,7 +100,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
 export class OrderError extends Error {
   constructor(
-    public readonly code: 'EMPTY_CART' | 'PRODUCT_NOT_FOUND' | 'INSUFFICIENT_STOCK',
+    public readonly code: 'EMPTY_CART' | 'PRODUCT_NOT_FOUND' | 'INSUFFICIENT_STOCK' | 'ORDER_NOT_FOUND' | 'INVALID_STATUS_TRANSITION' | 'INVALID_PAYMENT_STATE',
     message: string,
   ) {
     super(message);
@@ -117,4 +117,69 @@ export function findUserOrders(userId: string, skip: number, take: number) {
 
 export function findUserOrder(userId: string, id: string) {
   return prisma.order.findFirst({ where: { id, userId }, include: orderInclude });
+}
+
+export function findAdminOrders(status: OrderStatusInput | undefined, skip: number, take: number) {
+  const where = status ? { status } : {};
+  return prisma.$transaction([
+    prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take, include: orderInclude }),
+    prisma.order.count({ where }),
+  ]);
+}
+
+export async function confirmMockPayment(userId: string, id: string) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findFirst({ where: { id, userId }, include: { payment: true } });
+    if (!order) throw new OrderError('ORDER_NOT_FOUND', 'Order tidak ditemukan');
+    if (order.payment?.status === 'PAID' && order.status === 'PAID') {
+      return tx.order.findUnique({ where: { id }, include: orderInclude });
+    }
+    if (!order.payment || order.status !== 'PENDING' || order.payment.status !== 'PENDING') {
+      throw new OrderError('INVALID_PAYMENT_STATE', 'Order tidak dapat dibayar pada status saat ini');
+    }
+
+    await tx.payment.update({ where: { orderId: id }, data: { status: 'PAID', paidAt: new Date() } });
+    return tx.order.update({ where: { id }, data: { status: 'PAID', paymentStatus: 'PAID' }, include: orderInclude });
+  });
+}
+
+const allowedTransitions: Record<OrderStatusInput, OrderStatusInput[]> = {
+  PENDING: ['CANCELLED'],
+  PAID: ['PROCESSING', 'CANCELLED'],
+  PROCESSING: ['SHIPPED', 'CANCELLED'],
+  SHIPPED: ['COMPLETED'],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+export async function updateAdminOrderStatus(id: string, nextStatus: OrderStatusInput) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id }, include: { items: true, payment: true } });
+    if (!order) throw new OrderError('ORDER_NOT_FOUND', 'Order tidak ditemukan');
+    if (order.status === nextStatus) return tx.order.findUnique({ where: { id }, include: orderInclude });
+    if (!allowedTransitions[order.status].includes(nextStatus)) {
+      throw new OrderError('INVALID_STATUS_TRANSITION', `Order tidak dapat berubah dari ${order.status} ke ${nextStatus}`);
+    }
+
+    if (nextStatus === 'CANCELLED') {
+      for (const item of order.items) {
+        await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
+        await tx.inventoryMovement.create({
+          data: { productId: item.productId, type: 'RELEASE', quantity: item.quantity, reference: `cancel:${order.orderNumber}` },
+        });
+      }
+    }
+
+    const paymentStatus = nextStatus === 'CANCELLED'
+      ? order.payment?.status === 'PAID' ? 'REFUNDED' : 'EXPIRED'
+      : undefined;
+    if (paymentStatus && order.payment) {
+      await tx.payment.update({ where: { orderId: id }, data: { status: paymentStatus } });
+    }
+    return tx.order.update({
+      where: { id },
+      data: { status: nextStatus, ...(paymentStatus ? { paymentStatus } : {}) },
+      include: orderInclude,
+    });
+  });
 }
