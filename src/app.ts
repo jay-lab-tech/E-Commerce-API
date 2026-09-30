@@ -6,6 +6,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { categoryRouter } from './modules/category/category.routes.js';
 import { productRouter } from './modules/product/product.routes.js';
 import { cartRouter } from './modules/cart/cart.routes.js';
+import { orderRouter } from './modules/order/order.routes.js';
 
 export const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json({ limit: '25kb' }));
 app.use('/api/categories', categoryRouter);
 app.use('/api/products', productRouter);
 app.use('/api/cart', cartRouter);
+app.use('/api/orders', orderRouter);
 
 app.get('/health', async (_request, response) => {
   const [databaseCheck, redisCheck] = await Promise.allSettled([
