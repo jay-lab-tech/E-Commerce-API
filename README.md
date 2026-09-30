@@ -186,6 +186,16 @@ Checkout behavior:
 - Stores product name and price snapshots in `OrderItem` so later catalog changes do not alter order history.
 - Creates a `MOCK` pending payment record as the payment integration boundary for a later provider module.
 
+Payment and admin order operations:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/orders/:id/pay` | Confirm the mock payment for an owned pending order |
+| `GET` | `/api/admin/orders` | List all orders; admins can filter by status |
+| `PATCH` | `/api/admin/orders/:id/status` | Move an order through its allowed lifecycle |
+
+The allowed admin lifecycle is `PAID → PROCESSING → SHIPPED → COMPLETED`. Pending orders can be cancelled, and cancellation releases reserved stock with an inventory movement. Payment confirmation is idempotent for an already-paid order.
+
 ## Planned API modules
 
 | Module | Planned responsibility |
