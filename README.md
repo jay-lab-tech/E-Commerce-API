@@ -18,6 +18,7 @@ Implemented so far:
 - Category catalog module with public reads and admin-only create, update, and soft-delete endpoints.
 - Product catalog module with category relation, public filtering, and admin CRUD endpoints.
 - Authenticated cart module with stock-aware add, update, remove, and clear operations.
+- Transactional checkout and authenticated order history with stock reservation records.
 
 Business modules are intentionally added in phases. Catalog CRUD is the first implementation phase, followed by products, cart, and checkout.
 
@@ -167,6 +168,23 @@ All Cart endpoints require a Bearer access token. The cart is scoped to the auth
 | `DELETE` | `/api/cart` | Clear the current user's cart |
 
 Cart writes reject inactive products and quantities above current stock. Checkout will later re-check stock inside a database transaction before creating an order.
+
+## Order and Checkout API
+
+All Order endpoints require a Bearer access token. Checkout uses the authenticated user's cart and shipping address.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/orders` | Checkout the current cart and create a pending order |
+| `GET` | `/api/orders` | List the current user's orders |
+| `GET` | `/api/orders/:id` | Get one order owned by the current user |
+
+Checkout behavior:
+
+- Uses a PostgreSQL transaction for stock decrement, order creation, mock payment creation, inventory reservation, and cart clearing.
+- Rejects an empty cart, inactive products, or insufficient stock.
+- Stores product name and price snapshots in `OrderItem` so later catalog changes do not alter order history.
+- Creates a `MOCK` pending payment record as the payment integration boundary for a later provider module.
 
 ## Planned API modules
 
