@@ -4,6 +4,7 @@ import { logger } from '../utils/logger.js';
 
 export const requestLogger: RequestHandler = (request, response, next) => {
   const requestId = request.header('x-request-id') ?? randomUUID();
+  const path = request.originalUrl.split('?')[0] ?? request.originalUrl;
   const startedAt = performance.now();
   response.setHeader('X-Request-Id', requestId);
 
@@ -12,7 +13,7 @@ export const requestLogger: RequestHandler = (request, response, next) => {
     logger.info('http_request', {
       requestId,
       method: request.method,
-      path: request.path,
+      path,
       statusCode: response.statusCode,
       durationMs: Math.round(performance.now() - startedAt),
       ip: request.ip,
