@@ -209,6 +209,10 @@ The allowed admin lifecycle is `PAID → PROCESSING → SHIPPED → COMPLETED`. 
 
 Checkout will use a PostgreSQL transaction and row-level locking (`SELECT ... FOR UPDATE`) so concurrent checkouts cannot oversell stock. Payment webhooks will be idempotent because providers may retry the same event.
 
+## API documentation
+
+The complete OpenAPI 3.0 contract is available at [`docs/openapi.yaml`](docs/openapi.yaml). It can be imported into Swagger UI, Insomnia, Postman, or another OpenAPI-compatible client.
+
 ## Verification
 
 ```powershell
