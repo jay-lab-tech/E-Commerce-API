@@ -217,7 +217,14 @@ npm run build
 npm audit
 ```
 
-The initial foundation has no business endpoint tests yet; integration tests will be added with the first catalog and checkout modules.
+Run the end-to-end integration test while the Docker Compose stack is running. It creates uniquely named test records and verifies the catalog-to-checkout lifecycle:
+
+```powershell
+$env:JWT_ACCESS_SECRET = "local-ecommerce-development-secret-32chars-min"
+npm run test:integration
+```
+
+The test covers category creation, product creation, cart operations, transactional checkout, stock decrement, idempotent mock payment, and the admin order status lifecycle.
 
 ## Environment variables
 
