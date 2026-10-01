@@ -224,7 +224,7 @@ $env:JWT_ACCESS_SECRET = "local-ecommerce-development-secret-32chars-min"
 npm run test:integration
 ```
 
-The test covers category creation, product creation, cart operations, transactional checkout, stock decrement, idempotent mock payment, and the admin order status lifecycle.
+The tests cover category creation, product creation, cart operations, transactional checkout, stock decrement, idempotent mock payment, the admin order status lifecycle, empty-cart validation, role authorization, insufficient stock, cancellation stock release, and invalid status transitions.
 
 ## Environment variables
 
