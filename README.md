@@ -230,6 +230,13 @@ npm run test:integration
 
 The tests cover category creation, product creation, cart operations, transactional checkout, stock decrement, idempotent mock payment, the admin order status lifecycle, empty-cart validation, role authorization, insufficient stock, cancellation stock release, and invalid status transitions.
 
+## Operational protections
+
+- Redis-backed API rate limiting allows 120 requests per IP per 60-second window and returns `X-RateLimit-*` headers plus `Retry-After` when exceeded.
+- Every non-health request receives an `X-Request-Id` header.
+- HTTP requests and startup/errors are emitted as structured JSON logs for easier ingestion by a log platform.
+- Rate-limit failures are fail-open with a warning log so a Redis outage does not block the entire API; the health endpoint still reports Redis as unavailable.
+
 ## Environment variables
 
 See `.env.example`. Never commit `.env`, database credentials, payment credentials, or webhook secrets.
