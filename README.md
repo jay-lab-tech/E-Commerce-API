@@ -241,6 +241,28 @@ The tests cover category creation, product creation, cart operations, transactio
 
 See `.env.example`. Never commit `.env`, database credentials, payment credentials, or webhook secrets.
 
+## Auth Service integration and deployment
+
+This service does not duplicate the Auth Service user database. It validates the Auth Service access token locally using the same HS256 secret and the following claims:
+
+- `sub`: Auth Service user UUID, used as `userId` for carts and orders.
+- `role`: `USER` or `ADMIN`, used for authorization.
+- `iss` and `aud`: both default to `auth-service` and are configurable through `JWT_ISSUER` and `JWT_AUDIENCE`.
+
+For a deployment, configure these values in the platform secret/environment settings:
+
+```text
+DATABASE_URL=<managed PostgreSQL connection string>
+REDIS_URL=<managed Redis connection string>
+JWT_ACCESS_SECRET=<the exact same secret used by Auth Service>
+JWT_ISSUER=auth-service
+JWT_AUDIENCE=auth-service
+TRUST_PROXY=true
+PORT=<platform-provided port, if required>
+```
+
+Never copy the local Docker database password or development JWT secret into production. The `/health` endpoint is suitable for a platform health check and reports PostgreSQL/Redis dependency status. The container runs committed Prisma migrations before starting the API.
+
 ## Security scope
 
 Before exposing the service publicly, use HTTPS, production-grade secrets, restricted database access, authentication middleware connected to the Auth Service, webhook signature verification, request rate limits, backups, and monitoring. Payment gateway credentials and email credentials must remain server-side.

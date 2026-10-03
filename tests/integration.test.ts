@@ -5,12 +5,14 @@ import jwt from 'jsonwebtoken';
 
 const baseUrl = process.env.TEST_BASE_URL ?? 'http://localhost:3001';
 const secret = process.env.JWT_ACCESS_SECRET ?? 'local-ecommerce-development-secret-32chars-min';
+const issuer = process.env.JWT_ISSUER ?? 'auth-service';
+const audience = process.env.JWT_AUDIENCE ?? 'auth-service';
 
 function token(role: 'USER' | 'ADMIN') {
   return jwt.sign({ role }, secret, {
     subject: randomUUID(),
-    issuer: 'auth-service',
-    audience: 'auth-service',
+    issuer,
+    audience,
     expiresIn: '10m',
   });
 }
