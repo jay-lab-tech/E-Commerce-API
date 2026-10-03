@@ -20,8 +20,8 @@ export const requireAuth: RequestHandler = (request, response, next) => {
   try {
     const payload = jwt.verify(token, env.JWT_ACCESS_SECRET, {
       algorithms: ['HS256'],
-      issuer: 'auth-service',
-      audience: 'auth-service',
+      issuer: env.JWT_ISSUER,
+      audience: env.JWT_AUDIENCE,
     });
     if (typeof payload === 'string' || !payload.sub ||
       (payload.role !== 'USER' && payload.role !== 'ADMIN')) {

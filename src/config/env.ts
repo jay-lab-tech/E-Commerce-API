@@ -7,6 +7,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().url(),
   JWT_ACCESS_SECRET: z.string().min(32),
+  JWT_ISSUER: z.string().default('auth-service'),
+  JWT_AUDIENCE: z.string().default('auth-service'),
+  TRUST_PROXY: z.coerce.boolean().default(false),
 });
 
 export const env = envSchema.parse(process.env);

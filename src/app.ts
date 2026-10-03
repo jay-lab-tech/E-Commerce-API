@@ -10,10 +10,12 @@ import { orderRouter } from './modules/order/order.routes.js';
 import { adminOrderRouter } from './modules/order/admin-order.routes.js';
 import { redisRateLimit } from './middlewares/rateLimit.js';
 import { requestLogger } from './middlewares/requestLogger.js';
+import { env } from './config/env.js';
 
 export const app = express();
 
 app.disable('x-powered-by');
+app.set('trust proxy', env.TRUST_PROXY);
 app.use(helmet());
 app.use(express.json({ limit: '25kb' }));
 app.use(requestLogger);
