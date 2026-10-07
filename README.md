@@ -1,5 +1,7 @@
 # E-Commerce API
 
+![CI](https://github.com/jay-lab-tech/E-Commerce-API/actions/workflows/ci.yml/badge.svg)
+
 A modular REST API for an e-commerce system built with **Express 5, TypeScript, PostgreSQL, Prisma, and Redis**.
 
 The service owns catalog, cart, order, inventory, and payment-domain data. User identity remains owned by the separate Auth Service; this API will consume authenticated `userId` values instead of duplicating the user database.
