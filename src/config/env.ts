@@ -10,6 +10,7 @@ const envSchema = z.object({
   JWT_ISSUER: z.string().default('auth-service'),
   JWT_AUDIENCE: z.string().default('auth-service'),
   TRUST_PROXY: z.coerce.boolean().default(false),
+  CORS_ORIGIN: z.string().default('*'),
 });
 
 export const env = envSchema.parse(process.env);
