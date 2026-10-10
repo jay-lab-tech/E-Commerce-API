@@ -214,6 +214,7 @@ Checkout will use a PostgreSQL transaction and row-level locking (`SELECT ... FO
 ## API documentation
 
 The complete OpenAPI 3.0 contract is available at [`docs/openapi.yaml`](docs/openapi.yaml). It can be imported into Swagger UI, Insomnia, Postman, or another OpenAPI-compatible client.
+When running locally, interactive Swagger UI is available at `http://localhost:3001/docs`.
 
 ## Verification
 
@@ -279,3 +280,9 @@ No license has been selected yet. Until a `LICENSE` file is added, do not assume
 - [Detailed API reference](API.md)
 - [Security policy and limitations](SECURITY.md)
 - [Changelog](CHANGELOG.md)
+
+### Live API documentation
+
+Captured from the running local API at `/docs`:
+
+![E-Commerce API Swagger UI](output/playwright/api-docs.png)
