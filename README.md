@@ -272,3 +272,10 @@ Before exposing the service publicly, use HTTPS, production-grade secrets, restr
 ## License
 
 No license has been selected yet. Until a `LICENSE` file is added, do not assume others have permission to reuse or redistribute this code.
+
+## Project documentation
+
+- [Architecture and checkout consistency](ARCHITECTURE.md)
+- [Detailed API reference](API.md)
+- [Security policy and limitations](SECURITY.md)
+- [Changelog](CHANGELOG.md)
