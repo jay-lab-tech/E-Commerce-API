@@ -1,5 +1,6 @@
 import express from 'express';
 import helmet from 'helmet';
+import path from 'node:path';
 import { prisma } from './config/database.js';
 import { redis } from './config/redis.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -27,6 +28,11 @@ app.use('/api/products', productRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/admin/orders', adminOrderRouter);
+app.get(['/docs', '/docs/'], (_request, response) => {
+  response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com 'unsafe-inline'; img-src 'self' data: https:; object-src 'none'; base-uri 'self'");
+  response.sendFile(path.resolve('docs/index.html'));
+});
+app.use('/docs', express.static('docs'));
 
 app.get('/health', async (_request, response) => {
   const [databaseCheck, redisCheck] = await Promise.allSettled([
